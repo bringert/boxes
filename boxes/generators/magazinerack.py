@@ -21,21 +21,33 @@ class BinFrontEdge(edges.BaseEdge):
     char = "B"
     def __call__(self, length, **kw):
         f = self.settings.front
-        a1 = math.degrees(math.atan(f/(1-f)))
-        a2 = 45 + a1
+        # a1: the angle of the straight edge where the hole is
+        a1 = math.degrees(math.atan(math.tan(math.radians(self.angle)) * f/(1-f)))
+        # a2: the angle between the extension of the straight edge and
+        # the front finger joint edge
+        a2 = self.angle + a1
         self.corner(-a1)
         for i, l in enumerate(self.settings.sy):
-            self.edges["e"](l* (f**2+(1-f)**2)**0.5)
+            # The straight edge for the hole part
+            self.edges["e"](l * (1 - f) / math.cos(math.radians(a1)))
             self.corner(a2)
-            self.edges["f"](l*f*2**0.5)
+            # The finger joint edge holding the front wall
+            self.edges["f"](l * f / math.cos(math.radians(self.angle)))
             if i < len(self.settings.sy)-1:
                 if self.char == "B":
-                    self.polyline(0, 45, 0.5*self.settings.hi,
-                                  -90, self.thickness, -90, 0.5*self.settings.hi, 90-a1)
+                    # Inner wall, add a slot for the shelf
+                    self.polyline(
+                        # Turn to horizontal to start the slot
+                        0, 90 - self.angle,
+                        0.5*self.settings.hi, -90,
+                        self.thickness, -90,
+                        0.5*self.settings.hi, 90-a1)
                 else:
-                    self.polyline(0, -45, self.thickness, -a1)
+                    # Outer wall, add a slot for the shelf
+                    self.polyline(0, -self.angle, self.thickness, -a1)
             else:
-                self.corner(-45)
+                # Finished the last section, turn back to vertical
+                self.corner(-self.angle)
 
     def margin(self):
         return max(self.settings.sy) * self.settings.front
@@ -44,17 +56,20 @@ class BinFrontSideEdge(BinFrontEdge):
     char = 'b'
 
 class MagazineRack(Boxes):
-    """A Type tray variant to be used up right with sloped walls in front"""
+    """A wall mounted rack for laptops, magazines or documents"""
 
     ui_group = "Shelf"
 
     def __init__(self):
         Boxes.__init__(self)
-        self.buildArgParser("sx", "sy", "h", "outside")
+        self.buildArgParser(sx="100*1", sy="70*3", h="20", outside=False)
         self.addSettingsArgs(edges.FingerJointSettings, surroundingspaces=0.5)
         self.argparser.add_argument(
             "--front", action="store", type=float, default=0.4,
             help="fraction of bin height covert with slope")
+        self.argparser.add_argument(
+            "--angle", action="store", type=float, default=45,
+            help="angle of the front walls")
 
     def xSlots(self):
         posx = -0.5 * self.thickness
@@ -111,31 +126,30 @@ class MagazineRack(Boxes):
         self.addPart(BinFrontSideEdge(self, self))
 
         angledsettings = copy.deepcopy(self.edges["f"].settings)
-        angledsettings.setValues(self.thickness, True, angle=45)
+        angledsettings.setValues(self.thickness, True, angle=self.angle)
         angledsettings.edgeObjects(self, chars="gGH")
 
         # outer walls
         e = ["F", "f", edges.SlottedEdge(self, self.sx[::-1], "G"), "f"]
 
-        self.rectangularWall(x, h, e, callback=[self.xHoles],  move="right")
-        self.rectangularWall(y, h, "FFbF", callback=[self.yHoles, ], move="up")
-        self.rectangularWall(y, h, "FFbF", callback=[self.yHoles, ])
-        self.rectangularWall(x, h, "Ffef", callback=[self.xHoles, ], move="left")
+        self.rectangularWall(x, h, e, callback=[self.xHoles], move="right", label="Bottom")
+        self.rectangularWall(y, h, "FFbF", callback=[self.yHoles, ], move="up", label="Side wall")
+        self.rectangularWall(y, h, "FFbF", callback=[self.yHoles, ], label="Side wall")
+        self.rectangularWall(x, h, "Ffef", callback=[self.xHoles, ], move="left", label="Top")
         self.rectangularWall(y, h, "FFBF", move="up only")
 
-        # floor
-        self.rectangularWall(x, y, "ffff", callback=[self.xSlots, self.ySlots],move="right")
+        self.rectangularWall(x, y, "ffff", callback=[self.xSlots, self.ySlots],move="right", label="Rear wall")
         # Inner walls
         for i in range(len(self.sx) - 1):
             e = [edges.SlottedEdge(self, self.sy, "f"), "f", "B", "f"]
-            self.rectangularWall(y, hi, e, move="up")
+            self.rectangularWall(y, hi, e, move="up", label="Inner wall")
 
         for i in range(len(self.sy) - 1):
             e = [edges.SlottedEdge(self, self.sx, "f", slots=0.5 * hi), "f",
                  edges.SlottedEdge(self, self.sx[::-1], "G"), "f"]
-            self.rectangularWall(x, hi, e, move="up")
+            self.rectangularWall(x, hi, e, move="up", label="Internal shelf bottom")
 
         # Front walls
         for i in range(len(self.sy)):
             e = [edges.SlottedEdge(self, self.sx, "g"), "F", "e", "F"]
-            self.rectangularWall(x, self.sy[i]*self.front*2**0.5, e, callback=[self.frontHoles(i)], move="up")
+            self.rectangularWall(x, self.sy[i]*self.front*2**0.5, e, callback=[self.frontHoles(i)], move="up", label="Shelf front")
