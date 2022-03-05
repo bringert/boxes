@@ -28,8 +28,15 @@ class BinFrontEdge(edges.BaseEdge):
         a2 = self.angle + a1
         self.corner(-a1)
         for i, l in enumerate(self.settings.sy):
-            # The straight edge for the hole part
-            self.edges["e"](l * (1 - f) / math.cos(math.radians(a1)))
+            # Distance to corner at upper edge of front wall
+            el = l * (1 - f) / math.cos(math.radians(a1))
+            if self.curved:
+                # Curved edge for the hole part
+                self.curveTo(2.1*el, 2.1*el, 0.5*el, 0, el, 0)
+            else:
+                # The straight edge for the hole part
+                self.edges["e"](el)
+
             self.corner(a2)
             # The finger joint edge holding the front wall
             self.edges["f"](l * f / math.cos(math.radians(self.angle)))
@@ -48,6 +55,12 @@ class BinFrontEdge(edges.BaseEdge):
             else:
                 # Finished the last section, turn back to vertical
                 self.corner(-self.angle)
+
+    def curveToDebug(self, x1, y1, x2, y2, x3, y3):
+      self.circle(x1, y1, 2)
+      self.circle(x2, y2, 2)
+      self.circle(x3, y3, 2)
+      self.curveTo(x1, y1, x2, y2, x3, y3)
 
     def margin(self):
         hf = self.settings.front * math.tan(math.radians(self.angle))
@@ -72,6 +85,9 @@ class MagazineRack(Boxes):
         self.argparser.add_argument(
             "--angle", action="store", type=float, default=20,
             help="angle of the front walls")
+        self.argparser.add_argument(
+            "--curved", action="store", type=boolarg, default=True,
+            help="curved side walls around opening")
 
     def xSlots(self):
         posx = -0.5 * self.thickness
