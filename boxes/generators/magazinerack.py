@@ -31,8 +31,13 @@ class BinFrontEdge(edges.BaseEdge):
             # Distance to corner at upper edge of front wall
             el = l * (1 - f) / math.cos(math.radians(a1))
             if self.curved:
+                # Relative depth of the cutaway
+                c1 = 2.0
+                # Size of the opening
+                c2 = 0.5
+                ep = el * math.tan(math.radians(a1))
                 # Curved edge for the hole part
-                self.curveTo(2.1*el, 2.1*el, 0.5*el, 0, el, 0)
+                self.curveTo(c1 * el, c1 * ep, c2 * el, 0, el, 0)
             else:
                 # The straight edge for the hole part
                 self.edges["e"](el)
@@ -57,6 +62,7 @@ class BinFrontEdge(edges.BaseEdge):
                 self.corner(-self.angle)
 
     def curveToDebug(self, x1, y1, x2, y2, x3, y3):
+      self.circle(0, 0, 2)
       self.circle(x1, y1, 2)
       self.circle(x2, y2, 2)
       self.circle(x3, y3, 2)
@@ -88,6 +94,12 @@ class MagazineRack(Boxes):
         self.argparser.add_argument(
             "--curved", action="store", type=boolarg, default=True,
             help="curved side walls around opening")
+        self.argparser.add_argument(
+            "--curve_depth", action="store", type=float, default=2.0,
+            help="depth of the cutaway in the curved side walls, relative to the opening size")
+        self.argparser.add_argument(
+            "--curve_width", action="store", type=float, default=0.5,
+            help="width of the cutaway in the curved side walls, relative to the opening size")
 
     def xSlots(self):
         posx = -0.5 * self.thickness
