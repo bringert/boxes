@@ -62,13 +62,13 @@ class MagazineRack(Boxes):
 
     def __init__(self):
         Boxes.__init__(self)
-        self.buildArgParser(sx="100*1", sy="70*3", h="20", outside=False)
+        self.buildArgParser(sx="100*2", sy="70*3", h="20", outside=False)
         self.addSettingsArgs(edges.FingerJointSettings, surroundingspaces=0.5)
         self.argparser.add_argument(
             "--front", action="store", type=float, default=0.4,
             help="fraction of bin height covert with slope")
         self.argparser.add_argument(
-            "--angle", action="store", type=float, default=45,
+            "--angle", action="store", type=float, default=30,
             help="angle of the front walls")
 
     def xSlots(self):
