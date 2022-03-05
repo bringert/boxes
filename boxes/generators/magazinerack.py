@@ -50,7 +50,9 @@ class BinFrontEdge(edges.BaseEdge):
                 self.corner(-self.angle)
 
     def margin(self):
-        return max(self.settings.sy) * self.settings.front * math.tan(math.radians(self.angle))
+        hf = self.settings.front * math.tan(math.radians(self.angle))
+        # Add thickness to cover finger length when angle is small
+        return max(self.settings.sy) * hf + self.settings.thickness
 
 class BinFrontSideEdge(BinFrontEdge):
     char = 'b'
@@ -68,7 +70,7 @@ class MagazineRack(Boxes):
             "--front", action="store", type=float, default=0.7,
             help="fraction of bin height covert with slope")
         self.argparser.add_argument(
-            "--angle", action="store", type=float, default=25,
+            "--angle", action="store", type=float, default=20,
             help="angle of the front walls")
 
     def xSlots(self):
