@@ -126,7 +126,7 @@ class MagazineRack(Boxes):
         self.addPart(BinFrontSideEdge(self, self))
 
         angledsettings = copy.deepcopy(self.edges["f"].settings)
-        angledsettings.setValues(self.thickness, True, angle=self.angle)
+        angledsettings.setValues(self.thickness, True, angle=90 + self.angle)
         angledsettings.edgeObjects(self, chars="gGH")
 
         # outer walls
