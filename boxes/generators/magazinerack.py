@@ -50,7 +50,7 @@ class BinFrontEdge(edges.BaseEdge):
                 self.corner(-self.angle)
 
     def margin(self):
-        return max(self.settings.sy) * self.settings.front
+        return max(self.settings.sy) * self.settings.front * math.tan(math.radians(self.angle))
 
 class BinFrontSideEdge(BinFrontEdge):
     char = 'b'
