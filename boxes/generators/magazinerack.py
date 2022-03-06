@@ -80,6 +80,15 @@ class BinFrontEdge(edges.BaseEdge):
 class BinFrontSideEdge(BinFrontEdge):
     char = 'b'
 
+class NotchedEdge(edges.BaseEdge):
+    def __call__(self, length, **kw):
+      w = self.front_notch_width * min(self.sx)
+      h = self.front_notch_height * min(self.sy)
+      r = self.front_notch_radius * h
+      side = (length - w) / 2
+      self.polyline(side, 90,
+          h-r, (-90, r), w-2*r, (-90, r), h-r, 90, side)
+
 class MagazineRack(Boxes):
     """A wall mounted rack for laptops, magazines or documents"""
 
@@ -92,6 +101,15 @@ class MagazineRack(Boxes):
         self.argparser.add_argument(
             "--front", action="store", type=float, default=0.7,
             help="fraction of bin height covert with slope")
+        self.argparser.add_argument(
+            "--front_notch_height", action="store", type=float, default=0.20,
+            help="height of the notch at the top of the front wall, relative to the minimum section height")
+        self.argparser.add_argument(
+            "--front_notch_width", action="store", type=float, default=0.5,
+            help="width of the notch at the top of the front wall, relative to the minimum section width")
+        self.argparser.add_argument(
+            "--front_notch_radius", action="store", type=float, default=1,
+            help="corner radius in the both at the top of the front wall (relative to front_notch_height)")
         self.argparser.add_argument(
             "--angle", action="store", type=float, default=20,
             help="angle of the front walls")
@@ -186,6 +204,7 @@ class MagazineRack(Boxes):
 
         # Front walls
         for i in range(len(self.sy)):
-            e = [edges.SlottedEdge(self, self.sx, "g"), "F", "e", "F"]
+            top = NotchedEdge(self, self)
+            e = [edges.SlottedEdge(self, self.sx, "g"), "F", top, "F"]
             fy = self.sy[i] * self.front / math.cos(math.radians(self.angle))
             self.rectangularWall(x, fy, e, callback=[self.frontHoles(i)], move="up", label="Shelf front")
