@@ -207,4 +207,4 @@ class MagazineRack(Boxes):
             top = NotchedEdge(self, self)
             e = [edges.SlottedEdge(self, self.sx, "g"), "F", top, "F"]
             fy = self.sy[i] * self.front / math.cos(math.radians(self.angle))
-            self.rectangularWall(x, fy, e, callback=[self.frontHoles(i)], move="up", label="Shelf front")
+            self.rectangularWall(x, fy, e, callback=[self.frontHoles(i)], move="up", label="Bin front")
