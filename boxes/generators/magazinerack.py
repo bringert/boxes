@@ -96,20 +96,20 @@ class MagazineRack(Boxes):
 
     def __init__(self):
         Boxes.__init__(self)
-        self.buildArgParser(sx="100*2", sy="70*3", h="20", outside=False)
+        self.buildArgParser(sx="360*1", sy="180*2", h="30", outside=False)
         self.addSettingsArgs(edges.FingerJointSettings, surroundingspaces=0.5)
         self.argparser.add_argument(
-            "--front", action="store", type=float, default=0.7,
-            help="fraction of bin height covert with slope")
+            "--front", action="store", type=float, default=0.8,
+            help="fraction of bin height covered with slope")
         self.argparser.add_argument(
-            "--front_notch_height", action="store", type=float, default=0.20,
+            "--front_notch_height", action="store", type=float, default=0.2,
             help="height of the notch at the top of the front wall, relative to the minimum section height")
         self.argparser.add_argument(
             "--front_notch_width", action="store", type=float, default=0.5,
             help="width of the notch at the top of the front wall, relative to the minimum section width")
         self.argparser.add_argument(
-            "--front_notch_radius", action="store", type=float, default=1,
-            help="corner radius in the both at the top of the front wall (relative to front_notch_height)")
+            "--front_notch_radius", action="store", type=float, default=1.0,
+            help="corner radius in the both at the top of the front wall (relative to the notch height)")
         self.argparser.add_argument(
             "--angle", action="store", type=float, default=20,
             help="angle of the front walls")
