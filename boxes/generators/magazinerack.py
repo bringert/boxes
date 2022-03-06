@@ -22,9 +22,12 @@ class BinFrontEdge(edges.BaseEdge):
     def __call__(self, length, **kw):
         f = self.settings.front
         # a1: the angle of the straight edge where the hole is
-        a1 = math.degrees(math.atan(math.tan(math.radians(self.angle)) * f/(1-f)))
         # a2: the angle between the extension of the straight edge and
         # the front finger joint edge
+        if f < 1.0:
+          a1 = math.degrees(math.atan(math.tan(math.radians(self.angle)) * f/(1-f)))
+        else:
+          a1 = 180 - math.degrees(math.atan(math.tan(math.radians(self.angle)) * f/(f - 1)))
         a2 = self.angle + a1
         self.corner(-a1)
         for i, l in enumerate(self.settings.sy):
@@ -32,12 +35,13 @@ class BinFrontEdge(edges.BaseEdge):
             el = l * (1 - f) / math.cos(math.radians(a1))
             if self.curved:
                 # Relative depth of the cutaway
-                c1 = 2.0
+                c1 = self.curve_depth
                 # Size of the opening
-                c2 = 0.5
-                ep = el * math.tan(math.radians(a1))
+                c2 = self.curve_width
                 # Curved edge for the hole part
-                self.curveTo(c1 * el, c1 * ep, c2 * el, 0, el, 0)
+                # Note that the coordinates are relative to the vector
+                # from the start point to the end point
+                self.curveTo(c2 * el, c1 * el, c2 * el, 0, el, 0)
             else:
                 # The straight edge for the hole part
                 self.edges["e"](el)
@@ -55,7 +59,7 @@ class BinFrontEdge(edges.BaseEdge):
                         self.thickness, -90,
                         0.5*self.settings.hi, 90-a1)
                 else:
-                    # Outer wall, add a slot for the shelf
+                    # Outer wall
                     self.polyline(0, -self.angle, self.thickness, -a1)
             else:
                 # Finished the last section, turn back to vertical
@@ -95,7 +99,7 @@ class MagazineRack(Boxes):
             "--curved", action="store", type=boolarg, default=True,
             help="curved side walls around opening")
         self.argparser.add_argument(
-            "--curve_depth", action="store", type=float, default=2.0,
+            "--curve_depth", action="store", type=float, default=1.0,
             help="depth of the cutaway in the curved side walls, relative to the opening size")
         self.argparser.add_argument(
             "--curve_width", action="store", type=float, default=0.5,
@@ -150,7 +154,8 @@ class MagazineRack(Boxes):
         h = self.h
         hi = self.hi = h
         t = self.thickness
-        self.front = min(self.front, 0.999)
+        if self.front == 1.0:
+          self.front = 0.999
 
         self.addPart(BinFrontEdge(self, self))
         self.addPart(BinFrontSideEdge(self, self))
@@ -182,4 +187,5 @@ class MagazineRack(Boxes):
         # Front walls
         for i in range(len(self.sy)):
             e = [edges.SlottedEdge(self, self.sx, "g"), "F", "e", "F"]
-            self.rectangularWall(x, self.sy[i]*self.front*2**0.5, e, callback=[self.frontHoles(i)], move="up", label="Shelf front")
+            fy = self.sy[i] * self.front / math.cos(math.radians(self.angle))
+            self.rectangularWall(x, fy, e, callback=[self.frontHoles(i)], move="up", label="Shelf front")
